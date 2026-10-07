@@ -3,7 +3,6 @@ package com.freshsave.app.navigation
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -25,6 +24,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.freshsave.app.data.model.UserRole
+import com.freshsave.app.feature.auth.LoginRoute
+import com.freshsave.app.feature.onboarding.OnboardingRoute
+import com.freshsave.app.feature.role.RoleSelectionRoute
+import com.freshsave.app.feature.splash.SplashDestination
+import com.freshsave.app.feature.splash.SplashRoute
 import com.freshsave.app.ui.appContainer
 import com.freshsave.app.ui.components.BusinessBottomBar
 import com.freshsave.app.ui.components.BusinessTab
@@ -47,9 +52,9 @@ fun FreshSaveApp() {
 
     CompositionLocalProvider(LocalNow provides now, LocalSnackbarHostState provides snackbarHostState) {
         Scaffold(
-            // Screens handle the status bar themselves (some draw green behind it),
-            // so the Scaffold only reserves space at the bottom.
-            contentWindowInsets = WindowInsets.navigationBars,
+            // Screens handle system bars themselves (some draw green behind them), so the
+            // Scaffold only reserves room for the bottom bar when one is showing.
+            contentWindowInsets = WindowInsets(0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 destination.shopperTab()?.let { tab ->
@@ -75,20 +80,28 @@ fun FreshSaveApp() {
 private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifier) {
     NavHost(navController = navController, startDestination = SplashRoute, modifier = modifier) {
         composable<SplashRoute> {
-            PlaceholderScreen("Splash", "Continue" to { navController.navigate(OnboardingRoute) })
+            SplashRoute(onFinished = { destination ->
+                navController.navigateToRoot(
+                    when (destination) {
+                        SplashDestination.Onboarding -> OnboardingRoute
+                        SplashDestination.Login -> LoginRoute
+                        SplashDestination.RoleSelection -> RoleSelectionRoute
+                        SplashDestination.ShopperHome -> ShopperGraph
+                        SplashDestination.BusinessDashboard -> BusinessGraph
+                    },
+                )
+            })
         }
         composable<OnboardingRoute> {
-            PlaceholderScreen("Onboarding", "Skip" to { navController.navigate(LoginRoute) })
+            OnboardingRoute(onDone = { navController.navigateToRoot(LoginRoute) })
         }
         composable<LoginRoute> {
-            PlaceholderScreen("Log in", "Log in" to { navController.navigate(RoleSelectionRoute) })
+            LoginRoute(onAuthenticated = { navController.navigateToRoot(RoleSelectionRoute) })
         }
         composable<RoleSelectionRoute> {
-            PlaceholderScreen(
-                "Role selection",
-                "Continue as shopper" to { navController.navigateToRoot(ShopperGraph) },
-                "I'm a business" to { navController.navigateToRoot(BusinessGraph) },
-            )
+            RoleSelectionRoute(onRoleChosen = { role ->
+                navController.navigateToRoot(if (role == UserRole.SHOPPER) ShopperGraph else BusinessGraph)
+            })
         }
 
         navigation<ShopperGraph>(startDestination = HomeRoute) {

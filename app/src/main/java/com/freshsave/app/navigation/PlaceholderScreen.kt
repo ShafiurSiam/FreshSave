@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +25,7 @@ fun PlaceholderScreen(
         Modifier
             .fillMaxSize()
             .background(FreshSaveTheme.colors.background)
-            .statusBarsPadding()
+            .systemBarsPadding()
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
