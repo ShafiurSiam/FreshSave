@@ -134,7 +134,7 @@ class FakeImpactRepository(
     private val clock: AppClock,
     orderRepository: OrderRepository,
 ) : ImpactRepository {
-    private val sessionStart = clock.millis()
+    private val sessionStart = clock.sessionStartMillis
     private val myOrders = orderRepository.observeMyOrders()
 
     override fun observeImpact(): Flow<ImpactStats> = myOrders.map { orders ->

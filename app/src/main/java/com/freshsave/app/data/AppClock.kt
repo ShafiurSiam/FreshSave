@@ -14,7 +14,10 @@ import kotlinx.coroutines.launch
  * re-render on their own without each screen running its own timer loop.
  */
 class AppClock(scope: CoroutineScope) {
-    private val _now = MutableStateFlow(System.currentTimeMillis())
+    /** When the app process started; anything newer than this happened "this session". */
+    val sessionStartMillis: Long = System.currentTimeMillis()
+
+    private val _now = MutableStateFlow(sessionStartMillis)
     val now: StateFlow<Long> = _now.asStateFlow()
 
     init {

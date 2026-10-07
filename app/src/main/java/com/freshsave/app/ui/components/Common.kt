@@ -186,8 +186,13 @@ fun Avatar(initial: String, modifier: Modifier = Modifier, color: Color = FreshS
 /** Picks a stable avatar colour from a name, like the mixed avatars in the pickup queue. */
 @Composable
 fun avatarColorFor(name: String): Color {
-    val palette = listOf(FreshSaveTheme.colors.green, FreshSaveTheme.colors.orange, Color(0xFF3B82F6), Color(0xFF8B5CF6))
-    return palette[(name.hashCode() and 0x7fffffff) % palette.size]
+    val c = FreshSaveTheme.colors
+    val blue = Color(0xFF3B82F6)
+    val purple = Color(0xFF8B5CF6)
+    val teal = Color(0xFF14B8A6)
+    // Indexed by first letter, so A = green, K = orange, S = blue as in the pickup-queue mock-up.
+    val palette = listOf(purple, teal, c.green, purple, teal, c.orange, blue)
+    return palette[(name.firstOrNull()?.uppercaseChar()?.code ?: 0) % palette.size]
 }
 
 /** Row of 1–5 stars. Pass [onRate] to make it tappable. */

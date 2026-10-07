@@ -27,6 +27,13 @@ import androidx.navigation.toRoute
 import com.freshsave.app.data.model.AppNotification
 import com.freshsave.app.data.model.NotificationType
 import com.freshsave.app.data.model.UserRole
+import com.freshsave.app.feature.business.analytics.AnalyticsRoute as AnalyticsScreen
+import com.freshsave.app.feature.business.dashboard.DashboardRoute as DashboardScreen
+import com.freshsave.app.feature.business.listing.CreateListingRoute as CreateListingScreen
+import com.freshsave.app.feature.business.listings.ManageListingsRoute as ManageListingsScreen
+import com.freshsave.app.feature.business.profile.BusinessProfileRoute as BusinessProfileScreen
+import com.freshsave.app.feature.business.queue.PickupQueueRoute as PickupQueueScreen
+import com.freshsave.app.feature.business.ratings.RatingsRoute as RatingsScreen
 import com.freshsave.app.feature.favorites.FavoritesRoute as FavoritesScreen
 import com.freshsave.app.feature.help.HelpRoute as HelpScreen
 import com.freshsave.app.feature.impact.ImpactRoute as ImpactScreen
@@ -204,16 +211,47 @@ private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifie
 
         navigation<BusinessGraph>(startDestination = DashboardRoute) {
             composable<DashboardRoute> {
-                PlaceholderScreen("Business dashboard", "Post surplus listing" to { navController.navigate(CreateListingRoute()) })
+                DashboardScreen(
+                    onNotifications = { navController.navigate(NotificationsRoute) },
+                    onPostListing = { navController.navigate(CreateListingRoute()) },
+                    onOpenQueue = { navController.navigateToBusinessTab(BusinessTab.Orders) },
+                    onOpenRatings = { navController.navigate(RatingsRoute) },
+                )
             }
-            composable<ListingsRoute> { PlaceholderScreen("Active listings") }
-            composable<PickupQueueRoute> { PlaceholderScreen("Pickup queue") }
-            composable<AnalyticsRoute> { PlaceholderScreen("Analytics") }
+            composable<ListingsRoute> {
+                ManageListingsScreen(
+                    onEdit = { navController.navigate(CreateListingRoute(editDealId = it)) },
+                    onCreate = { navController.navigate(CreateListingRoute()) },
+                )
+            }
+            composable<PickupQueueRoute> { PickupQueueScreen() }
+            composable<AnalyticsRoute> { AnalyticsScreen() }
             composable<BusinessProfileRoute> {
-                PlaceholderScreen("Business profile", "Ratings" to { navController.navigate(RatingsRoute) })
+                BusinessProfileScreen(
+                    onRatings = { navController.navigate(RatingsRoute) },
+                    onNotifications = { navController.navigate(NotificationsRoute) },
+                    onHelp = { navController.navigate(HelpRoute) },
+                    onSwitchedToShopper = { navController.navigateToRoot(ShopperGraph) },
+                    onLoggedOut = { navController.navigateToRoot(LoginRoute) },
+                )
             }
-            composable<CreateListingRoute> { PlaceholderScreen("New listing") }
-            composable<RatingsRoute> { PlaceholderScreen("Your ratings") }
+            composable<CreateListingRoute> { entry ->
+                val editId = entry.toRoute<CreateListingRoute>().editDealId
+                CreateListingScreen(
+                    editDealId = editId,
+                    onClose = { navController.navigateUp() },
+                    onPublished = {
+                        // New listing -> show it in Active listings; an edit just goes back.
+                        if (editId == null) {
+                            navController.navigate(ListingsRoute) {
+                                popUpTo(DashboardRoute)
+                                launchSingleTop = true
+                            }
+                        } else navController.navigateUp()
+                    },
+                )
+            }
+            composable<RatingsRoute> { RatingsScreen(onBack = { navController.navigateUp() }) }
         }
 
         composable<NotificationsRoute> {
