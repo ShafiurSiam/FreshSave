@@ -47,6 +47,7 @@ import com.freshsave.app.ui.components.CardShape
 import com.freshsave.app.ui.components.DealCard
 import com.freshsave.app.ui.components.EmptyState
 import com.freshsave.app.ui.components.SectionHeader
+import com.freshsave.app.ui.components.SkeletonDealCard
 import com.freshsave.app.ui.theme.FreshSaveTheme
 
 @Composable
@@ -130,6 +131,9 @@ fun HomeScreen(
         }
         item {
             SectionHeader("Ending soon", action = "See all", onAction = onSeeAll, modifier = Modifier.padding(top = 6.dp))
+        }
+        if (state.loading) {
+            items(3) { SkeletonDealCard() }
         }
         if (!state.loading && state.endingSoon.isEmpty()) {
             item {

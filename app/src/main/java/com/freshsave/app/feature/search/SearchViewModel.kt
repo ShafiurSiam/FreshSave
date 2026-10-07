@@ -39,6 +39,7 @@ data class SearchFilters(
 }
 
 data class SearchUiState(
+    val loading: Boolean = true,
     val filters: SearchFilters = SearchFilters(),
     val results: List<Deal> = emptyList(),
     val showingResults: Boolean = false,
@@ -53,7 +54,7 @@ class SearchViewModel(clock: AppClock, dealRepository: DealRepository) : ViewMod
     val state: StateFlow<SearchUiState> = combine(
         dealRepository.observeDeals(), filters, showingResults, minuteNow,
     ) { deals, f, showing, now ->
-        SearchUiState(filters = f, results = applyFilters(deals, f, now), showingResults = showing)
+        SearchUiState(loading = false, filters = f, results = applyFilters(deals, f, now), showingResults = showing)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
 
     fun onQueryChange(query: String) = filters.update { it.copy(query = query) }

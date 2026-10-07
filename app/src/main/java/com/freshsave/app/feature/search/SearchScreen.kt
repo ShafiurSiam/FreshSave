@@ -211,10 +211,11 @@ private fun FiltersPanel(state: SearchUiState, actions: SearchActions) {
         ) {
             SecondaryButton("Reset", actions.onReset, Modifier.weight(0.8f))
             PrimaryButton(
-                text = when (val n = state.results.size) {
-                    0 -> "No deals match"
-                    1 -> "Show 1 deal"
-                    else -> "Show $n deals"
+                text = when {
+                    state.loading -> "Loading deals…"
+                    state.results.isEmpty() -> "No deals match"
+                    state.results.size == 1 -> "Show 1 deal"
+                    else -> "Show ${state.results.size} deals"
                 },
                 onClick = actions.onShowResults,
                 enabled = state.results.isNotEmpty(),

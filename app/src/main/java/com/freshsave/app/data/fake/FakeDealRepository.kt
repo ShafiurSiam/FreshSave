@@ -4,8 +4,11 @@ import com.freshsave.app.data.AppClock
 import com.freshsave.app.data.model.Deal
 import com.freshsave.app.data.model.ListingDraft
 import com.freshsave.app.data.repository.DealRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.util.UUID
@@ -15,7 +18,16 @@ class FakeDealRepository(private val clock: AppClock) : DealRepository {
 
     private val deals = MutableStateFlow(MockData.deals(clock.millis()))
 
-    override fun observeDeals(): Flow<List<Deal>> = deals
+    /** Pretend the first fetch goes over the network so screens can show a loading state. */
+    @Volatile private var warmedUp = false
+
+    override fun observeDeals(): Flow<List<Deal>> = flow {
+        if (!warmedUp) {
+            delay(700)
+            warmedUp = true
+        }
+        emitAll(deals)
+    }
 
     override fun observeDeal(id: String): Flow<Deal?> = deals.map { list -> list.firstOrNull { it.id == id } }
 

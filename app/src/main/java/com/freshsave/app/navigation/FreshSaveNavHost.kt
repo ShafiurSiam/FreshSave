@@ -1,5 +1,10 @@
 package com.freshsave.app.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -100,7 +105,16 @@ fun FreshSaveApp() {
 
 @Composable
 private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = SplashRoute, modifier = modifier) {
+    // Screens slide in slightly from the right and fade; going back reverses it.
+    NavHost(
+        navController = navController,
+        startDestination = SplashRoute,
+        modifier = modifier,
+        enterTransition = { fadeIn(tween(250)) + slideInHorizontally(tween(250)) { it / 12 } },
+        exitTransition = { fadeOut(tween(200)) },
+        popEnterTransition = { fadeIn(tween(250)) },
+        popExitTransition = { fadeOut(tween(200)) + slideOutHorizontally(tween(250)) { it / 12 } },
+    ) {
         composable<SplashRoute> {
             SplashScreen(onFinished = { destination ->
                 navController.navigateToRoot(

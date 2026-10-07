@@ -179,7 +179,14 @@ fun SegmentedTabs(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (selected) colors.card else Color.Transparent)
+                    // In dark mode the card colour is darker than the track, so lift the thumb instead.
+                    .background(
+                        when {
+                            !selected -> Color.Transparent
+                            colors.isDark -> Color(0xFF35453C)
+                            else -> colors.card
+                        },
+                    )
                     .clickable { onSelect(index) }
                     .padding(vertical = 10.dp),
             )
