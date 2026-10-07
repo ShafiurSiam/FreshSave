@@ -24,7 +24,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.freshsave.app.data.model.AppNotification
+import com.freshsave.app.data.model.NotificationType
 import com.freshsave.app.data.model.UserRole
+import com.freshsave.app.feature.favorites.FavoritesRoute as FavoritesScreen
+import com.freshsave.app.feature.help.HelpRoute as HelpScreen
+import com.freshsave.app.feature.impact.ImpactRoute as ImpactScreen
+import com.freshsave.app.feature.notifications.NotificationsRoute as NotificationsScreen
+import com.freshsave.app.feature.profile.ProfileRoute as ProfileScreen
+import com.freshsave.app.feature.review.RateReviewRoute as RateReviewScreen
 import com.freshsave.app.feature.auth.LoginRoute as LoginScreen
 import com.freshsave.app.feature.checkout.CheckoutRoute as CheckoutScreen
 import com.freshsave.app.feature.confirmation.OrderConfirmationRoute as OrderConfirmationScreen
@@ -133,14 +141,14 @@ private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifie
                     onBrowse = { navController.navigateToShopperTab(ShopperTab.Home) },
                 )
             }
-            composable<ImpactRoute> { PlaceholderScreen("Impact") }
+            composable<ImpactRoute> { ImpactScreen() }
             composable<ProfileRoute> {
-                PlaceholderScreen(
-                    "Profile",
-                    "Favorites" to { navController.navigate(FavoritesRoute) },
-                    "Help & support" to { navController.navigate(HelpRoute) },
-                    "Switch to business" to { navController.navigateToRoot(BusinessGraph) },
-                    "Log out" to { navController.navigateToRoot(LoginRoute) },
+                ProfileScreen(
+                    onFavorites = { navController.navigate(FavoritesRoute) },
+                    onNotifications = { navController.navigate(NotificationsRoute) },
+                    onHelp = { navController.navigate(HelpRoute) },
+                    onSwitchedToBusiness = { navController.navigateToRoot(BusinessGraph) },
+                    onLoggedOut = { navController.navigateToRoot(LoginRoute) },
                 )
             }
             composable<DealDetailRoute> { entry ->
@@ -174,8 +182,18 @@ private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifie
                     onViewOrder = { navController.navigateToShopperTab(ShopperTab.Orders) },
                 )
             }
-            composable<FavoritesRoute> { PlaceholderScreen("Favorites") }
-            composable<RateReviewRoute> { PlaceholderScreen("Rate & review") }
+            composable<FavoritesRoute> {
+                FavoritesScreen(
+                    onBack = { navController.navigateUp() },
+                    onDealClick = { navController.navigate(DealDetailRoute(it)) },
+                )
+            }
+            composable<RateReviewRoute> { entry ->
+                RateReviewScreen(
+                    orderId = entry.toRoute<RateReviewRoute>().orderId,
+                    onClose = { navController.navigateUp() },
+                )
+            }
             composable<FullMapRoute> {
                 FullMapScreen(
                     onBack = { navController.navigateUp() },
@@ -198,8 +216,29 @@ private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifie
             composable<RatingsRoute> { PlaceholderScreen("Your ratings") }
         }
 
-        composable<NotificationsRoute> { PlaceholderScreen("Notifications") }
-        composable<HelpRoute> { PlaceholderScreen("Help & support") }
+        composable<NotificationsRoute> {
+            NotificationsScreen(
+                onBack = { navController.navigateUp() },
+                onOpen = { navController.openNotification(it) },
+            )
+        }
+        composable<HelpRoute> { HelpScreen(onBack = { navController.navigateUp() }) }
+    }
+}
+
+/** Follows the arrows from the Notifications inbox in App.pdf. */
+private fun NavController.openNotification(n: AppNotification) {
+    val target = n.targetId
+    when (n.type) {
+        NotificationType.DEAL_ENDING ->
+            if (n.audience == UserRole.BUSINESS) navigateToBusinessTab(BusinessTab.Listings)
+            else if (target != null) navigate(DealDetailRoute(target))
+        NotificationType.NEW_FROM_FAVORITE -> if (target != null) navigate(DealDetailRoute(target))
+        NotificationType.ORDER_UPDATE -> navigateToShopperTab(ShopperTab.Orders)
+        NotificationType.REVIEW_PROMPT -> if (target != null) navigate(RateReviewRoute(target))
+        NotificationType.WEEKLY_RECAP -> navigateToShopperTab(ShopperTab.Impact)
+        NotificationType.NEW_ORDER -> navigateToBusinessTab(BusinessTab.Orders)
+        NotificationType.NEW_REVIEW -> navigate(RatingsRoute)
     }
 }
 

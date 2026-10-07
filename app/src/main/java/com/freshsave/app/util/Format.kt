@@ -31,10 +31,11 @@ private fun sameDay(a: Long, b: Long): Boolean {
 fun isToday(millis: Long, now: Long) = sameDay(millis, now)
 fun isTomorrow(millis: Long, now: Long) = sameDay(millis, now + 24 * 60 * 60_000L)
 
-/** "today", "tomorrow" or "Wed 23 Jul". */
+/** "today", "tomorrow", "yesterday" or "Wed 23 Jul". */
 fun formatDayWord(millis: Long, now: Long): String = when {
     isToday(millis, now) -> "today"
     isTomorrow(millis, now) -> "tomorrow"
+    sameDay(millis, now - 24 * 60 * 60_000L) -> "yesterday"
     else -> SimpleDateFormat("EEE d MMM", Locale.US).format(Date(millis))
 }
 
