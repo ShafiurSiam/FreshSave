@@ -52,4 +52,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.coil.compose)
     implementation(libs.zxing.core)
+
+    // Plain JVM unit tests (app/src/test) — run with ./gradlew test
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
