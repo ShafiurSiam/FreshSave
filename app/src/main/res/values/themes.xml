@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose draws everything; this theme only sets what shows before the first frame. -->
+    <style name="Theme.FreshSave" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fs_green</item>
+    </style>
+</resources>
