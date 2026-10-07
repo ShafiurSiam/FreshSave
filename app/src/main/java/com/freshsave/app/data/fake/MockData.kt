@@ -37,9 +37,9 @@ object MockData {
         Shop("star-kabab", "Star Kabab", "Dhanmondi", "Kabab & grill", 4.6, 540, 1.4, 0.86f, 0.30f),
         Shop("north-end", "North End Coffee", "Gulshan", "Café", 4.7, 187, 0.9, 0.48f, 0.22f),
         Shop("mithai-ghor", "Mithai Ghor", "Gulshan", "Sweet shop", 4.7, 266, 1.8, 0.15f, 0.75f),
-        Shop("bread-beyond", "Bread & Beyond", "Banani", "Bakery", 4.4, 98, 2.6, 0.72f, 0.85f),
+        Shop("bread-beyond", "Bread & Beyond", "Banani", "Bakery", 4.4, 98, 2.6, 0.45f, 0.80f),
         Shop("spice-route", "Spice Route Kitchen", "Banani", "Restaurant", 4.5, 143, 1.9, 0.10f, 0.20f),
-        Shop("dairy-corner", "Gulshan Dairy Corner", "Gulshan", "Dairy shop", 4.3, 64, 2.9, 0.92f, 0.70f),
+        Shop("dairy-corner", "Gulshan Dairy Corner", "Gulshan", "Dairy shop", 4.3, 64, 2.9, 0.90f, 0.55f),
     )
 
     private fun shop(id: String) = shops.first { it.id == id }
@@ -61,10 +61,13 @@ object MockData {
         original: Int, price: Int, total: Int, left: Int, start: Long, end: Long, imageLabel: String,
     ): Deal {
         val s = shop(shopId)
+        // Round to 5 minutes so windows read "6:30–8:00 pm" rather than "6:32–8:14 pm".
+        val step = 5 * MIN
         return Deal(
             id = id, shopId = s.id, shopName = s.name, area = s.area, title = title,
             description = description, category = category, originalPrice = original, price = price,
-            quantityTotal = total, quantityLeft = left, pickupStartMillis = start, pickupEndMillis = end,
+            quantityTotal = total, quantityLeft = left,
+            pickupStartMillis = start / step * step, pickupEndMillis = (end + step - 1) / step * step,
             distanceKm = s.distanceKm, rating = s.rating, reviewCount = s.reviewCount, imageLabel = imageLabel,
         )
     }
@@ -170,11 +173,12 @@ object MockData {
         status: OrderStatus, collectedAt: Long? = null, reviewed: Boolean = false,
     ): Order {
         val s = shop(shopId)
+        val step = 5 * MIN
         return Order(
             id = id, dealId = dealId, shopId = shopId, shopName = s.name, area = s.area, itemTitle = title,
             quantity = qty, unitPrice = unit, originalUnitPrice = original, serviceFee = SERVICE_FEE,
-            paymentMethod = PaymentMethod.BKASH, pickupCode = code, pickupStartMillis = start,
-            pickupEndMillis = end, customerId = customerId, customerName = customerName,
+            paymentMethod = PaymentMethod.BKASH, pickupCode = code, pickupStartMillis = start / step * step,
+            pickupEndMillis = (end + step - 1) / step * step, customerId = customerId, customerName = customerName,
             createdAtMillis = created, status = status, collectedAtMillis = collectedAt, reviewed = reviewed,
         )
     }

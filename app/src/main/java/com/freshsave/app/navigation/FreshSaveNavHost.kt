@@ -25,11 +25,18 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.freshsave.app.data.model.UserRole
-import com.freshsave.app.feature.auth.LoginRoute
-import com.freshsave.app.feature.onboarding.OnboardingRoute
-import com.freshsave.app.feature.role.RoleSelectionRoute
+import com.freshsave.app.feature.auth.LoginRoute as LoginScreen
+import com.freshsave.app.feature.checkout.CheckoutRoute as CheckoutScreen
+import com.freshsave.app.feature.confirmation.OrderConfirmationRoute as OrderConfirmationScreen
+import com.freshsave.app.feature.deal.DealDetailRoute as DealDetailScreen
+import com.freshsave.app.feature.home.FullMapRoute as FullMapScreen
+import com.freshsave.app.feature.home.HomeRoute as HomeScreen
+import com.freshsave.app.feature.orders.OrdersRoute as OrdersScreen
+import com.freshsave.app.feature.search.SearchRoute as SearchScreen
+import com.freshsave.app.feature.onboarding.OnboardingRoute as OnboardingScreen
+import com.freshsave.app.feature.role.RoleSelectionRoute as RoleSelectionScreen
 import com.freshsave.app.feature.splash.SplashDestination
-import com.freshsave.app.feature.splash.SplashRoute
+import com.freshsave.app.feature.splash.SplashRoute as SplashScreen
 import com.freshsave.app.ui.appContainer
 import com.freshsave.app.ui.components.BusinessBottomBar
 import com.freshsave.app.ui.components.BusinessTab
@@ -80,7 +87,7 @@ fun FreshSaveApp() {
 private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifier) {
     NavHost(navController = navController, startDestination = SplashRoute, modifier = modifier) {
         composable<SplashRoute> {
-            SplashRoute(onFinished = { destination ->
+            SplashScreen(onFinished = { destination ->
                 navController.navigateToRoot(
                     when (destination) {
                         SplashDestination.Onboarding -> OnboardingRoute
@@ -93,28 +100,39 @@ private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifie
             })
         }
         composable<OnboardingRoute> {
-            OnboardingRoute(onDone = { navController.navigateToRoot(LoginRoute) })
+            OnboardingScreen(onDone = { navController.navigateToRoot(LoginRoute) })
         }
         composable<LoginRoute> {
-            LoginRoute(onAuthenticated = { navController.navigateToRoot(RoleSelectionRoute) })
+            LoginScreen(onAuthenticated = { navController.navigateToRoot(RoleSelectionRoute) })
         }
         composable<RoleSelectionRoute> {
-            RoleSelectionRoute(onRoleChosen = { role ->
+            RoleSelectionScreen(onRoleChosen = { role ->
                 navController.navigateToRoot(if (role == UserRole.SHOPPER) ShopperGraph else BusinessGraph)
             })
         }
 
         navigation<ShopperGraph>(startDestination = HomeRoute) {
             composable<HomeRoute> {
-                PlaceholderScreen(
-                    "Home feed",
-                    "Deal detail" to { navController.navigate(DealDetailRoute("tasty-bag")) },
-                    "Notifications" to { navController.navigate(NotificationsRoute) },
-                    "Full map" to { navController.navigate(FullMapRoute) },
+                HomeScreen(
+                    onDealClick = { navController.navigate(DealDetailRoute(it)) },
+                    onNotificationsClick = { navController.navigate(NotificationsRoute) },
+                    onOpenMap = { navController.navigate(FullMapRoute) },
+                    onSeeAll = { navController.navigateToShopperTab(ShopperTab.Search) },
                 )
             }
-            composable<SearchRoute> { PlaceholderScreen("Search & filters") }
-            composable<OrdersRoute> { PlaceholderScreen("My orders") }
+            composable<SearchRoute> {
+                SearchScreen(
+                    onCancel = { navController.navigateToShopperTab(ShopperTab.Home) },
+                    onDealClick = { navController.navigate(DealDetailRoute(it)) },
+                )
+            }
+            composable<OrdersRoute> {
+                OrdersScreen(
+                    onOrderClick = { navController.navigate(OrderConfirmationRoute(it)) },
+                    onRate = { navController.navigate(RateReviewRoute(it)) },
+                    onBrowse = { navController.navigateToShopperTab(ShopperTab.Home) },
+                )
+            }
             composable<ImpactRoute> { PlaceholderScreen("Impact") }
             composable<ProfileRoute> {
                 PlaceholderScreen(
@@ -126,21 +144,44 @@ private fun FreshSaveNavHost(navController: NavHostController, modifier: Modifie
                 )
             }
             composable<DealDetailRoute> { entry ->
+                // toRoute() rebuilds the DealDetailRoute object (and its dealId) from the back stack entry.
                 val route = entry.toRoute<DealDetailRoute>()
-                PlaceholderScreen(
-                    "Deal ${route.dealId}",
-                    "Reserve now" to { navController.navigate(CheckoutRoute(route.dealId, 1)) },
+                DealDetailScreen(
+                    dealId = route.dealId,
+                    onBack = { navController.navigateUp() },
+                    onReserve = { dealId, qty -> navController.navigate(CheckoutRoute(dealId, qty)) },
+                    onOpenFavorites = { navController.navigate(FavoritesRoute) },
                 )
             }
-            composable<CheckoutRoute> {
-                PlaceholderScreen("Checkout", "Pay" to { navController.navigate(OrderConfirmationRoute("o-4f29")) })
+            composable<CheckoutRoute> { entry ->
+                val route = entry.toRoute<CheckoutRoute>()
+                CheckoutScreen(
+                    dealId = route.dealId,
+                    quantity = route.quantity,
+                    onBack = { navController.navigateUp() },
+                    onOrderPlaced = { orderId ->
+                        // Drop Deal detail + Checkout so Back from the confirmation returns to the feed.
+                        navController.navigate(OrderConfirmationRoute(orderId)) {
+                            popUpTo<DealDetailRoute> { inclusive = true }
+                        }
+                    },
+                )
             }
-            composable<OrderConfirmationRoute> {
-                PlaceholderScreen("Order confirmation", "View order" to { navController.navigateToShopperTab(ShopperTab.Orders) })
+            composable<OrderConfirmationRoute> { entry ->
+                OrderConfirmationScreen(
+                    orderId = entry.toRoute<OrderConfirmationRoute>().orderId,
+                    onClose = { navController.navigateUp() },
+                    onViewOrder = { navController.navigateToShopperTab(ShopperTab.Orders) },
+                )
             }
             composable<FavoritesRoute> { PlaceholderScreen("Favorites") }
             composable<RateReviewRoute> { PlaceholderScreen("Rate & review") }
-            composable<FullMapRoute> { PlaceholderScreen("Full map") }
+            composable<FullMapRoute> {
+                FullMapScreen(
+                    onBack = { navController.navigateUp() },
+                    onDealClick = { navController.navigate(DealDetailRoute(it)) },
+                )
+            }
         }
 
         navigation<BusinessGraph>(startDestination = DashboardRoute) {
