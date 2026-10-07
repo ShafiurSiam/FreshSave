@@ -1,12 +1,36 @@
-*.iml
+# Gradle / build output
 .gradle/
-/local.properties
-/.idea/
-.DS_Store
-/build/
-/app/build/
-/captures/
+build/
+**/build/
+.kotlin/
 .externalNativeBuild/
 .cxx/
-.kotlin/
+captures/
+
+# Machine-specific config (contains your local SDK path)
+local.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Packaged apps and signing keys — never commit these
+*.apk
+*.aab
+*.ap_
+*.dex
+*.keystore
+*.jks
+keystore.properties
+
+# Logs and temporary output
+*.log
+*.hprof
+hs_err_pid*
+
+# Ad-hoc emulator screenshots (curated ones live in docs/screenshots/)
 shot*.png
+/*.png
